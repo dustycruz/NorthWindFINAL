@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Customers";
+}
+
+<h2>Customers</h2>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Customer ID</th>
+        <th>Company Name</th>
+        <th>Contact Name</th>
+    </tr>
+
+    @foreach (var c in Model)
+    {
+        <tr>
+            <td>@c.customerId</td>
+            <td>@c.companyName</td>
+            <td>@c.contactName</td>
+        </tr>
+    }
+</table>
+
+<a href="/Account/Logout">Logout</a>
