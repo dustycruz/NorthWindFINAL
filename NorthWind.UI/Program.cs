@@ -15,6 +15,9 @@ builder.Services.AddHttpClient("NorthwindAPI", client =>
     client.BaseAddress = new Uri("http://localhost:5155/api/");
 });
 
+builder.Services.AddSession();
+
+
 
 var app = builder.Build();
 
@@ -24,16 +27,17 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

@@ -1,60 +1,54 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Security.Claims;
+﻿using Microsoft.AspNetCore.Mvc;
+using Northwind.UI.Models.DTO;
+using NorthWind.UI.Models.DTO;
 using System.Text;
+using System.Text.Json;
 
-namespace Northwind.UI.Controllers
+namespace NorthWind.UI.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IConfiguration _config;
-        private readonly HttpClient _client;
+        private readonly IHttpClientFactory httpClientFactory;
 
-        public AccountController(IConfiguration config)
+        public AccountController(IHttpClientFactory httpClientFactory)
         {
-            _config = config;
-            _client = new HttpClient();
+            this.httpClientFactory = httpClientFactory;
         }
 
         [HttpGet]
-        public IActionResult Login() => View();
+        public IActionResult Login()
+        {
+            return View();
+        }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string username, string password)
-        {
-            var baseUrl = _config["ApiBaseUrl"];
-            var loginData = new { username, password };
-            var content = new StringContent(JsonConvert.SerializeObject(loginData), Encoding.UTF8, "application/json");
+        public async Task<IActionResult> Login(LoginRequestDto model)
 
-            var response = await _client.PostAsync($"{baseUrl}/auth/login", content);
-            if (!response.IsSuccessStatusCode)
+        {
+            var client = httpClientFactory.CreateClient();
+
+            var httpRequestMessage = new HttpRequestMessage()
             {
-                ViewBag.Error = "Invalid username or password.";
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("http://localhost:5155/api/Auth/login"),
+                Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+            };
+
+            var httpResponse = await client.SendAsync(httpRequestMessage);
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                ViewBag.Error = "Invalid Credentials";
                 return View();
             }
 
-            var json = await response.Content.ReadAsStringAsync();
-            dynamic result = JsonConvert.DeserializeObject(json);
-            string token = result.token;
+            var loginResult = await httpResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, username),
-                new Claim("JwtToken", token)
-            };
+            // ✅ STORE TOKEN IN SESSION
+            HttpContext.Session.SetString("JWToken", loginResult.Token);
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
+            // ✅ REDIRECT
             return RedirectToAction("Index", "Customer");
-        }
-
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login");
         }
     }
 }
