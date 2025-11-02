@@ -1,35 +1,35 @@
-﻿@model NorthWind.UI.Models.DTO.AddCustomerDto
+﻿@model Northwind.DTO.Customer.CreateCustomerDto
 
-@{
-    ViewData["Title"] = "Add Customer";
-}
+<form method="post" action="/api/Customer">
+    <label>Company Name</label>
+    <input asp-for="CompanyName" class="form-control" />
 
-<h2>Add Customer</h2>
+    <label>Contact Name</label>
+    <input asp-for="ContactName" class="form-control" />
 
-<form method="post" asp-controller="Customer" asp-action="Add">
+    <label>Contact Title</label>
+    <input asp-for="ContactTitle" class="form-control" />
 
-    <div class="form-group">
-        <label>Name</label>
-        <input asp-for="Name" class="form-control" />
-    </div>
+    <label>Address</label>
+    <input asp-for="Address" class="form-control" />
 
-    <div class="form-group">
-        <label>Contact Name</label>
-        <input asp-for="ContactName" class="form-control" />
-    </div>
+    <label>City</label>
+    <input asp-for="City" class="form-control" />
 
-    <div class="form-group">
-        <label>Address</label>
-        <input asp-for="Address" class="form-control" />
-    </div>
+    <label>Region</label>
+    <input asp-for="Region" class="form-control" />
 
-    <div class="form-group">
-        <label>Country</label>
-        <input asp-for="Country" class="form-control" />
-    </div>
+    <label>Postal Code</label>
+    <input asp-for="PostalCode" class="form-control" />
 
-    <button type="submit" class="btn btn-success" style="margin-top:10px;">
-        Save
-    </button>
+    <label>Country</label>
+    <input asp-for="Country" class="form-control" />
 
+    <label>Phone</label>
+    <input asp-for="Phone" class="form-control" />
+
+    <label>Fax</label>
+    <input asp-for="Fax" class="form-control" />
+
+    <button type="submit" class="btn btn-primary mt-2">Add</button>
 </form>

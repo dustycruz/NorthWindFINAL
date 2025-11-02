@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using NorthWind.UI.Models.DTO;
+using Northwind.DTO.Customer;
 
 namespace NorthWind.UI.Controllers
 {
@@ -37,27 +38,24 @@ namespace NorthWind.UI.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Add(AddCustomerDto model)
+        public async Task<IActionResult> Add(CreateCustomerDto model)
         {
             var token = HttpContext.Session.GetString("JWToken");
             var client = httpClientFactory.CreateClient("NorthwindAPI");
             client.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
 
-            var httpRequest = new HttpRequestMessage()
-            {
-                Method = HttpMethod.Post,
-                RequestUri = new Uri("http://localhost:5155/api/Customer"), // ✅ correct
-                Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
-            };
-
-            var response = await client.SendAsync(httpRequest);
+            var response = await client.PostAsJsonAsync("Customer", model);
 
             if (response.IsSuccessStatusCode)
                 return RedirectToAction("Index", "Customer");
 
+            ViewBag.Error = $"Error: {response.StatusCode}";
             return View(model);
         }
+
+
+
 
     }
 }

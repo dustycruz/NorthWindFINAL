@@ -1,63 +1,54 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Northwind.DTO.Customer;
+using Northwind.Data; // Your DbContext namespace
+using Northwind.DTO.Customer; // Your CreateCustomerDto namespace
 using Northwind.Model.Domain;
-using Northwind.Repositories;
-using NorthWind.Model.DTO.Customer;
 
-namespace Northwind.Controllers
+
+namespace NorthWind.API.Controllers
 {
-    [Authorize]
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    [Authorize] // ✅ requires token
     public class CustomerController : ControllerBase
     {
-        private readonly IGenericRepository<Customer> _repository;
-        private readonly IMapper _mapper;
+        private readonly NorthwindDbContext _context;
 
-        public CustomerController(IGenericRepository<Customer> repository, IMapper mapper)
+        public CustomerController(NorthwindDbContext context)
         {
-            _repository = repository;
-            _mapper = mapper;
+            _context = context;
         }
 
+        // GET: api/Customer
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(_mapper.Map<List<CustomerDto>>(await _repository.GetAllAsync()));
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public IActionResult GetAll()
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return NotFound();
-            return Ok(_mapper.Map<CustomerDto>(entity));
+            var customers = _context.Customers.ToList();
+            return Ok(customers);
         }
 
+        // POST: api/Customer
         [HttpPost]
-        public async Task<IActionResult> Create(CustomerDto dto)
+        public IActionResult Create(CreateCustomerDto dto)
         {
-            var entity = _mapper.Map<Customer>(dto);
-            await _repository.AddAsync(entity);
-            return Ok(_mapper.Map<CustomerDto>(entity));
-        }
+            var customer = new Customer
+            {
+                CompanyName = dto.CompanyName,
+                ContactName = dto.ContactName,
+                ContactTitle = dto.ContactTitle,
+                Address = dto.Address,
+                City = dto.City,
+                Region = dto.Region,
+                PostalCode = dto.PostalCode,
+                Country = dto.Country,
+                Phone = dto.Phone,
+                Fax = dto.Fax
+            };
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, CustomerDto dto)
-        {
-            var existing = await _repository.GetByIdAsync(id);
-            if (existing == null) return NotFound();
+            _context.Customers.Add(customer);
+            _context.SaveChanges();
 
-            _mapper.Map(dto, existing);
-            await _repository.UpdateAsync(existing);
-            return Ok(_mapper.Map<CustomerDto>(existing));
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _repository.DeleteAsync(id);
-            return NoContent();
+            return Ok(customer);
         }
     }
 }
