@@ -1,23 +1,17 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-    });
-builder.Services.AddHttpClient("NorthwindAPI", client =>
+// ? Add session support
+builder.Services.AddSession(options =>
 {
-    client.BaseAddress = new Uri("http://localhost:5155/api/");
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
-
-builder.Services.AddSession();
-
-
 
 var app = builder.Build();
 
@@ -27,14 +21,15 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseSession();
-app.UseAuthentication();
-app.UseAuthorization();
 
+// ? Enable session
+app.UseSession();
+
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

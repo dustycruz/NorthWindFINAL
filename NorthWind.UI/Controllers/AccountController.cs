@@ -20,6 +20,13 @@ namespace NorthWind.UI.Controllers
         {
             return View();
         }
+        [HttpPost]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Remove("JWToken");
+            return RedirectToAction("Login", "Account");
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginRequestDto model)
