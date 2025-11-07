@@ -1,0 +1,31 @@
+﻿@model NorthWind.UI.Models.CustomerViewModel
+
+@{
+    ViewData["Title"] = "Customer Details";
+}
+
+<h2>Customer Details</h2>
+
+<div class="mb-3">
+    <label>Customer ID:</label>
+    <p>@Model.CustomerId</p>
+</div>
+<div class="mb-3">
+    <label>Company Name:</label>
+    <p>@Model.CompanyName</p>
+</div>
+<div class="mb-3">
+    <label>Contact Name:</label>
+    <p>@Model.ContactName</p>
+</div>
+<div class="mb-3">
+    <label>Contact Title:</label>
+    <p>@Model.ContactTitle</p>
+</div>
+<div class="mb-3">
+    <label>City:</label>
+    <p>@Model.City</p>
+</div>
+
+<a asp-action="Edit" asp-route-id="@Model.CustomerId" class="btn btn-warning">Edit</a>
+<a asp-action="Index" class="btn btn-secondary">Back</a>

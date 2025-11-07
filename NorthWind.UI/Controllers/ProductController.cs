@@ -1,75 +1,133 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Northwind.DTO.Product;
-using NorthWind.UI.Filters;
-using NorthWind.UI.Models;
 using NorthWind.UI.Models.DTO;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 
 namespace NorthWind.UI.Controllers
 {
-    [AuthorizeUI]
-    public class ProductsController : Controller
+    public class ProductController : Controller
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "http://localhost:5155/api/Product";
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string apiUrl = "http://localhost:5155/api/Products";
 
-        public ProductsController(IHttpClientFactory factory)
+
+        public ProductController(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = factory.CreateClient();
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        private void AddAuthHeader() =>
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", HttpContext.Session.GetString("JWToken"));
+        private void AddAuthHeader()
+        {
+            var token = _httpContextAccessor.HttpContext?.Session.GetString("JWToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+        }
 
+        // GET: Product
         public async Task<IActionResult> Index()
         {
             AddAuthHeader();
-            var response = await _httpClient.GetAsync(_baseUrl);
-            if (!response.IsSuccessStatusCode) return View(new List<ProductViewModel>());
+            var response = await _httpClient.GetAsync(apiUrl);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.Error = "API not reachable: " + response.StatusCode;
+                return View(new List<ProductDto>());
+            }
+
             var json = await response.Content.ReadAsStringAsync();
-            var products = JsonConvert.DeserializeObject<List<ProductViewModel>>(json);
+            var products = JsonConvert.DeserializeObject<List<ProductDto>>(json);
             return View(products);
         }
 
-        public IActionResult Create() => View();
-
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateProductDto dto)
+        // GET: Product/Details/5
+        public async Task<IActionResult> Details(int id)
         {
             AddAuthHeader();
-            var json = JsonConvert.SerializeObject(dto);
-            var response = await _httpClient.PostAsync(_baseUrl, new StringContent(json, Encoding.UTF8, "application/json"));
-            if (!response.IsSuccessStatusCode) return View(dto);
-            return RedirectToAction(nameof(Index));
-        }
+            var response = await _httpClient.GetAsync($"{apiUrl}/{id}");
+            if (!response.IsSuccessStatusCode)
+                return NotFound();
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            AddAuthHeader();
-            var response = await _httpClient.GetAsync($"{_baseUrl}/{id}");
-            if (!response.IsSuccessStatusCode) return NotFound();
             var json = await response.Content.ReadAsStringAsync();
-            var product = JsonConvert.DeserializeObject<ProductViewModel>(json);
+            var product = JsonConvert.DeserializeObject<ProductDto>(json);
             return View(product);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Edit(int id, UpdateProductDto dto)
+        // GET: Product/Create
+        public IActionResult Create()
         {
+            return View();
+        }
+
+        // POST: Product/Create
+        [HttpPost]
+        public async Task<IActionResult> Create(ProductDto model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
             AddAuthHeader();
-            var json = JsonConvert.SerializeObject(dto);
-            var response = await _httpClient.PutAsync($"{_baseUrl}/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
-            if (!response.IsSuccessStatusCode) return View(dto);
+            var json = JsonConvert.SerializeObject(model);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(apiUrl, content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.Error = "Create failed. " + response.StatusCode;
+                return View(model);
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: Product/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            AddAuthHeader();
+            var response = await _httpClient.GetAsync($"{apiUrl}/{id}");
+            if (!response.IsSuccessStatusCode)
+                return NotFound();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var product = JsonConvert.DeserializeObject<ProductDto>(json);
+            return View(product);
+        }
+
+        // POST: Product/Edit/5
+        [HttpPost]
+        public async Task<IActionResult> Edit(ProductDto model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            AddAuthHeader();
+            var json = JsonConvert.SerializeObject(model);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PutAsync($"{apiUrl}/{model.ProductId}", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.Error = "Update failed. " + response.StatusCode;
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Product/Delete/5
+        [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
             AddAuthHeader();
-            await _httpClient.DeleteAsync($"{_baseUrl}/{id}");
+            await _httpClient.DeleteAsync($"{apiUrl}/{id}");
             return RedirectToAction(nameof(Index));
         }
     }

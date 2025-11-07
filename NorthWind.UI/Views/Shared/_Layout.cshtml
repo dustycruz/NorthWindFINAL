@@ -33,10 +33,10 @@
                         @if (!string.IsNullOrEmpty(token))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Products</a>
+                                <a class="nav-link text-dark" asp-controller="Product" asp-action="Index">Products</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Orders" asp-action="Index">Orders</a>
+                                <a class="nav-link text-dark" asp-controller="Order" asp-action="Index">Orders</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Customer" asp-action="Index">Customers</a>
@@ -47,12 +47,7 @@
                                 </form>
                             </li>
                         }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                        }
+
 
                     </ul>
                 </div>

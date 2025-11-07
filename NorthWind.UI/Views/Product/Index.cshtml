@@ -8,8 +8,13 @@
 <h2>Products</h2>
 
 <p>
-    <a asp-action="Create" class="btn btn-primary">Add New Product</a>
+    <a asp-controller="Product" asp-action="Create" class="btn btn-primary">Add New Product</a>
 </p>
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
 
 <table class="table table-striped">
     <thead>
@@ -17,11 +22,11 @@
             <th>Product Name</th>
             <th>Unit Price</th>
             <th>Units In Stock</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @if (Model != null)
+        @if (Model != null && Model.Any())
         {
             foreach (var p in Model)
             {
@@ -30,13 +35,19 @@
                     <td>@p.UnitPrice.ToString("C")</td>
                     <td>@p.UnitsInStock</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-warning btn-sm">Edit</a>
-                        <form asp-action="Delete" asp-route-id="@p.ProductId" method="post" style="display:inline">
+                        <a asp-controller="Product" asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-warning btn-sm">Edit</a>
+                        <form asp-controller="Product" asp-action="Delete" asp-route-id="@p.ProductId" method="post" style="display:inline">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </td>
                 </tr>
             }
+        }
+        else
+        {
+            <tr>
+                <td colspan="4" class="text-center">No products found.</td>
+            </tr>
         }
     </tbody>
 </table>

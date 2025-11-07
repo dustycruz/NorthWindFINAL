@@ -22,8 +22,9 @@ builder.Services.AddHttpContextAccessor();
 // HttpClient pointing to API - named "NorthWindAPI"
 builder.Services.AddHttpClient("NorthWindAPI", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["NorthWindAPI:BaseUrl"] ?? "https://localhost:5001");
+    client.BaseAddress = new Uri(builder.Configuration["NorthWindAPI:BaseUrl"] ?? "https://localhost:5155/");
 });
+
 
 var app = builder.Build();
 
