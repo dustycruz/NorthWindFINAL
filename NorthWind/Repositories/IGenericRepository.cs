@@ -1,14 +1,17 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public interface IGenericRepository<T> where T : class
+namespace NorthWind.Repositories
 {
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<T?> GetByIdAsync(object id);
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-    Task<T> AddAsync(T entity);
-    Task UpdateAsync(T entity);
-    Task DeleteAsync(T entity);           // keep this
-    Task DeleteAsync(object id);         // add this
-    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
-    Task SaveChangesAsync();
+    public interface IGenericRepository<T> where T : class
+    {
+        Task<IEnumerable<T>> GetAllAsync();
+        Task<T?> GetAsync(int id);
+        Task<T> AddAsync(T entity);
+        Task UpdateAsync(T entity);
+        Task DeleteAsync(int id);
+
+        // <-- ADD this overload to allow deleting by entity (useful for composite-key entities)
+        Task DeleteAsync(T entity);
+    }
 }

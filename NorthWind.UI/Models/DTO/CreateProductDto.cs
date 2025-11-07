@@ -1,8 +1,7 @@
-﻿namespace NorthWind.UI.Models
+﻿namespace Northwind.DTO.Product
 {
-    public class ProductViewModel
+    public class CreateProductDto
     {
-        public int Id { get; set; }
         public string ProductName { get; set; }
         public decimal UnitPrice { get; set; }
         public int UnitsInStock { get; set; }

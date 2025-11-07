@@ -1,54 +1,62 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Northwind.Data; // Your DbContext namespace
-using Northwind.DTO.Customer; // Your CreateCustomerDto namespace
-using Northwind.Model.Domain;
 
+using Northwind.DTO.Customer;
 
-namespace NorthWind.API.Controllers
+using NorthWind.Service;
+
+namespace Northwind.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // ✅ requires token
+    [Authorize]
     public class CustomerController : ControllerBase
     {
-        private readonly NorthwindDbContext _context;
+        private readonly ICustomerService _service;
 
-        public CustomerController(NorthwindDbContext context)
+        public CustomerController(ICustomerService service)
         {
-            _context = context;
+            _service = service;
         }
 
-        // GET: api/Customer
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var customers = _context.Customers.ToList();
+            var customers = await _service.GetAllAsync();
             return Ok(customers);
         }
 
-        // POST: api/Customer
-        [HttpPost]
-        public IActionResult Create(CreateCustomerDto dto)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
         {
-            var customer = new Customer
-            {
-                CompanyName = dto.CompanyName,
-                ContactName = dto.ContactName,
-                ContactTitle = dto.ContactTitle,
-                Address = dto.Address,
-                City = dto.City,
-                Region = dto.Region,
-                PostalCode = dto.PostalCode,
-                Country = dto.Country,
-                Phone = dto.Phone,
-                Fax = dto.Fax
-            };
-
-            _context.Customers.Add(customer);
-            _context.SaveChanges();
-
+            var customer = await _service.GetByIdAsync(id);
+            if (customer == null) return NotFound();
             return Ok(customer);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] CreateCustomerDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateCustomerDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var updated = await _service.UpdateAsync(id, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
+            return NoContent();
         }
     }
 }

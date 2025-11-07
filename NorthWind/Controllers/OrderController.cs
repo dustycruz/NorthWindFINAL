@@ -1,61 +1,59 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Northwind.Model.Domain;
-using Northwind.Repositories;
 using Northwind.DTO.Order;
+using NorthWind.Service;
 
-namespace Northwind.Controllers
+namespace Northwind.API.Controllers
 {
-    [Authorize]
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
     public class OrderController : ControllerBase
     {
-        private readonly IGenericRepository<Order> _repository;
-        private readonly IMapper _mapper;
+        private readonly IOrderService _service;
 
-        public OrderController(IGenericRepository<Order> repository, IMapper mapper)
+        public OrderController(IOrderService service)
         {
-            _repository = repository;
-            _mapper = mapper;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(_mapper.Map<List<OrderDto>>(await _repository.GetAllAsync()));
+        public async Task<IActionResult> GetAll()
+        {
+            var orders = await _service.GetAllAsync();
+            return Ok(orders);
+        }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return NotFound();
-            return Ok(_mapper.Map<OrderDto>(entity));
+            var order = await _service.GetByIdAsync(id);
+            if (order == null) return NotFound();
+            return Ok(order);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateOrderDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
         {
-            var entity = _mapper.Map<Order>(dto);
-            await _repository.AddAsync(entity);
-            return Ok(_mapper.Map<OrderDto>(entity));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(Get), new { id = created.OrderId }, created);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, OrderDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateOrderDto dto)
         {
-            var existing = await _repository.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-
-            _mapper.Map(dto, existing);
-            await _repository.UpdateAsync(existing);
-            return Ok(_mapper.Map<OrderDto>(existing));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var updated = await _service.UpdateAsync(id, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _repository.DeleteAsync(id);
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

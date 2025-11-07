@@ -1,61 +1,60 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Northwind.Model.Domain;
-using Northwind.Repositories;
 using Northwind.DTO.Supplier;
+using NorthWind.Service;
 
-namespace Northwind.Controllers
+
+namespace Northwind.API.Controllers
 {
-    [Authorize]
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
     public class SupplierController : ControllerBase
     {
-        private readonly IGenericRepository<Supplier> _repository;
-        private readonly IMapper _mapper;
+        private readonly ISupplierService _service;
 
-        public SupplierController(IGenericRepository<Supplier> repository, IMapper mapper)
+        public SupplierController(ISupplierService service)
         {
-            _repository = repository;
-            _mapper = mapper;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(_mapper.Map<List<SupplierDto>>(await _repository.GetAllAsync()));
+        public async Task<IActionResult> GetAll()
+        {
+            var suppliers = await _service.GetAllAsync();
+            return Ok(suppliers);
+        }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return NotFound();
-            return Ok(_mapper.Map<SupplierDto>(entity));
+            var supplier = await _service.GetByIdAsync(id);
+            if (supplier == null) return NotFound();
+            return Ok(supplier);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateSupplierDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateSupplierDto dto)
         {
-            var entity = _mapper.Map<Supplier>(dto);
-            await _repository.AddAsync(entity);
-            return Ok(_mapper.Map<SupplierDto>(entity));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, SupplierDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateSupplierDto dto)
         {
-            var existing = await _repository.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-
-            _mapper.Map(dto, existing);
-            await _repository.UpdateAsync(existing);
-            return Ok(_mapper.Map<SupplierDto>(existing));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var updated = await _service.UpdateAsync(id, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _repository.DeleteAsync(id);
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

@@ -1,67 +1,59 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Northwind.DTO.Order;
-using Northwind.Model.Domain;
-using Northwind.Repositories;
+using NorthWind.Service;
 
-namespace Northwind.Controllers
+namespace Northwind.API.Controllers
 {
-    [Authorize]
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
     public class OrderDetailController : ControllerBase
     {
-        private readonly IGenericRepository<OrderDetail> _repository;
-        private readonly IMapper _mapper;
+        private readonly IOrderDetailService _service;
 
-        public OrderDetailController(IGenericRepository<OrderDetail> repository, IMapper mapper)
+        public OrderDetailController(IOrderDetailService service)
         {
-            _repository = repository;
-            _mapper = mapper;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() =>
-            Ok(_mapper.Map<List<OrderDetailDto>>(await _repository.GetAllAsync()));
+        public async Task<IActionResult> GetAll()
+        {
+            var details = await _service.GetAllAsync();
+            return Ok(details);
+        }
 
         [HttpGet("{orderId}/{productId}")]
-        public async Task<IActionResult> GetById(int orderId, int productId)
+        public async Task<IActionResult> Get(int orderId, int productId)
         {
-            var entity = await _repository.FindAsync(od => od.OrderId == orderId && od.ProductId == productId);
-            var orderDetail = entity.FirstOrDefault();
-            if (orderDetail == null) return NotFound();
-            return Ok(_mapper.Map<OrderDetailDto>(orderDetail));
+            var detail = await _service.GetByIdAsync(orderId, productId);
+            if (detail == null) return NotFound();
+            return Ok(detail);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateOrderDetailDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateOrderDetailDto dto)
         {
-            var entity = _mapper.Map<OrderDetail>(dto);
-            await _repository.AddAsync(entity);
-            return Ok(_mapper.Map<OrderDetailDto>(entity));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(Get), new { orderId = created.OrderId, productId = created.ProductId }, created);
         }
 
         [HttpPut("{orderId}/{productId}")]
-        public async Task<IActionResult> Update(int orderId, int productId, OrderDetailDto dto)
+        public async Task<IActionResult> Update(int orderId, int productId, [FromBody] UpdateOrderDetailDto dto)
         {
-            var existingList = await _repository.FindAsync(od => od.OrderId == orderId && od.ProductId == productId);
-            var existing = existingList.FirstOrDefault();
-            if (existing == null) return NotFound();
-
-            _mapper.Map(dto, existing);
-            await _repository.UpdateAsync(existing);
-            return Ok(_mapper.Map<OrderDetailDto>(existing));
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var updated = await _service.UpdateAsync(orderId, productId, dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
         [HttpDelete("{orderId}/{productId}")]
         public async Task<IActionResult> Delete(int orderId, int productId)
         {
-            var existingList = await _repository.FindAsync(od => od.OrderId == orderId && od.ProductId == productId);
-            var existing = existingList.FirstOrDefault();
-            if (existing == null) return NotFound();
-
-            await _repository.DeleteAsync(existing);
+            var success = await _service.DeleteAsync(orderId, productId);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

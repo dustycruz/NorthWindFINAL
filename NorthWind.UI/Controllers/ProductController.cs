@@ -1,87 +1,39 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NorthWind.UI.Models;
-using System.Net.Http.Headers;
-using System.Text;
-using Newtonsoft.Json;
+using Northwind.DTO.Product;
+using NorthWind.UI.Models.DTO;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace NorthWind.UI.Controllers
 {
-    public class ProductController : Controller
+    public class ProductsController : Controller
     {
-        private readonly HttpClient _httpClient;
+        private readonly HttpClient _http;
 
-        public ProductController(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+        public ProductsController(IHttpClientFactory factory)
         {
-            _httpClient = httpClientFactory.CreateClient();
-            _httpClient.BaseAddress = new Uri("http://localhost:5155/api/Product");
-
-            var token = httpContextAccessor.HttpContext?.Session.GetString("JWToken");
-
-            // Redirect to login if not logged in
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new UnauthorizedAccessException("You must log in first.");
-            }
-
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            _http = factory.CreateClient("NorthWindAPI");
         }
 
         public async Task<IActionResult> Index()
         {
-            var response = await _httpClient.GetAsync("");
-            if (!response.IsSuccessStatusCode) return View(new List<ProductViewModel>());
-            var json = await response.Content.ReadAsStringAsync();
-            var products = JsonConvert.DeserializeObject<List<ProductViewModel>>(json);
+            var products = await _http.GetFromJsonAsync<IEnumerable<ProductDto>>("/api/products");
             return View(products);
         }
 
         public IActionResult Create() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Create(ProductViewModel model)
+        public async Task<IActionResult> Create(CreateProductDto dto)
         {
-            var json = JsonConvert.SerializeObject(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("", content);
-
-            if (response.IsSuccessStatusCode) return RedirectToAction(nameof(Index));
-            return View(model);
-        }
-
-        public async Task<IActionResult> Edit(int id)
-        {
-            var response = await _httpClient.GetAsync($"{id}");
-            if (!response.IsSuccessStatusCode) return NotFound();
-            var json = await response.Content.ReadAsStringAsync();
-            var product = JsonConvert.DeserializeObject<ProductViewModel>(json);
-            return View(product);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(int id, ProductViewModel model)
-        {
-            var json = JsonConvert.SerializeObject(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{id}", content);
-
-            if (response.IsSuccessStatusCode) return RedirectToAction(nameof(Index));
-            return View(model);
-        }
-
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _httpClient.DeleteAsync($"{id}");
+            if (!ModelState.IsValid) return View(dto);
+            var res = await _http.PostAsJsonAsync("/api/products", dto);
+            if (!res.IsSuccessStatusCode) return View("Error");
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Details(int id)
-        {
-            var response = await _httpClient.GetAsync($"{id}");
-            if (!response.IsSuccessStatusCode) return NotFound();
-            var json = await response.Content.ReadAsStringAsync();
-            var product = JsonConvert.DeserializeObject<ProductViewModel>(json);
-            return View(product);
-        }
+        // Edit and Delete actions can be added similarly (call PUT /api/products/{id} and DELETE /api/products/{id})
     }
 }

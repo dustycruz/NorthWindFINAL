@@ -1,30 +1,43 @@
-﻿@model IEnumerable<NorthWind.UI.Models.ProductViewModel>
+﻿
+@using NorthWind.UI.Models.DTO
+@model IEnumerable<ProductDto>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
 <h2>Products</h2>
-<a asp-action="Create" class="btn btn-primary">Add Product</a>
-<table class="table table-striped mt-3">
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add New Product</a>
+</p>
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Name</th>
+            <th>Product</th>
             <th>Price</th>
-            <th>Stock</th>
-            <th>Actions</th>
+            <th>Discontinued</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @if (Model != null)
         {
-            <tr>
-                <td>@item.Id</td>
-                <td>@item.ProductName</td>
-                <td>@item.UnitPrice</td>
-                <td>@item.UnitsInStock</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                </td>
-            </tr>
+            foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.ProductName</td>
+                    <td>@p.UnitPrice</td>
+                    <td>@p.Discontinued</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-warning btn-sm">Edit</a>
+                        <form asp-action="Delete" asp-route-id="@p.ProductId" method="post" style="display:inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>
