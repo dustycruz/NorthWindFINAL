@@ -1,0 +1,81 @@
+﻿@model NorthWind.UI.Models.EmployeeDto
+
+<h2>Edit Employee</h2>
+
+<form asp-action="Edit" method="post" class="mt-3">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="TitleOfCourtesy" class="form-label"></label>
+                <input asp-for="TitleOfCourtesy" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BirthDate" class="form-label"></label>
+                <input asp-for="BirthDate" type="date" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HireDate" class="form-label"></label>
+                <input asp-for="HireDate" type="date" class="form-control" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label asp-for="Address" class="form-label"></label>
+                <input asp-for="Address" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="City" class="form-label"></label>
+                <input asp-for="City" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Region" class="form-label"></label>
+                <input asp-for="Region" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="PostalCode" class="form-label"></label>
+                <input asp-for="PostalCode" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Country" class="form-label"></label>
+                <input asp-for="Country" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="HomePhone" class="form-label"></label>
+                <input asp-for="HomePhone" class="form-control" />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ReportsToId" class="form-label"></label>
+                <input asp-for="ReportsToId" type="number" class="form-control" />
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save Changes</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

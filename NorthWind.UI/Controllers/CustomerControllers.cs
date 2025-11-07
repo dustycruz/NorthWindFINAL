@@ -79,6 +79,7 @@ namespace NorthWind.UI.Controllers
         }
 
         // ------------------------- EDIT -------------------------
+        // GET: Customers/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
             AddAuthHeader();
@@ -86,36 +87,43 @@ namespace NorthWind.UI.Controllers
             if (!response.IsSuccessStatusCode) return NotFound();
 
             var json = await response.Content.ReadAsStringAsync();
-            var customer = JsonConvert.DeserializeObject<CustomerViewModel>(json);
-            return View(customer);
-        }
+            var customerVm = JsonConvert.DeserializeObject<CustomerViewModel>(json);
 
-        [HttpPost]
-        public async Task<IActionResult> Edit(CustomerViewModel model)
-        {
-            if (!ModelState.IsValid) return View(model);
-
-            AddAuthHeader();
-            var dto = new UpdateCustomerDto
+            var dto = new CustomerDto
             {
-                CompanyName = model.CompanyName,
-                ContactName = model.ContactName,
-                ContactTitle = model.ContactTitle,
-                City = model.City
+                CustomerId = customerVm.CustomerId,
+                CompanyName = customerVm.CompanyName,
+                ContactName = customerVm.ContactName,
+                ContactTitle = customerVm.ContactTitle,
+                City = customerVm.City
             };
 
+            return View(dto);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(CustomerDto dto)
+        {
+            if (!ModelState.IsValid)
+                return View(dto);
+
+            AddAuthHeader();
             var json = JsonConvert.SerializeObject(dto);
-            var response = await _httpClient.PutAsync($"{_baseUrl}/{model.CustomerId}", new StringContent(json, Encoding.UTF8, "application/json"));
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"{_baseUrl}/{dto.CustomerId}", content);
 
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                ViewBag.Error = $"Update failed: {error}";
-                return View(model);
+                ViewBag.Error = $"Failed to update: {error}";
+                return View(dto);
             }
 
             return RedirectToAction(nameof(Index));
         }
+
 
         // ------------------------- DELETE -------------------------
         [HttpPost]

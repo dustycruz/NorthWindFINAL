@@ -42,11 +42,24 @@
                                 <a class="nav-link text-dark" asp-controller="Customer" asp-action="Index">Customers</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Employee" asp-action="Index">Employees</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="OrderDetail" asp-action="Index">Order Details</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Shipper" asp-action="Index">Shippers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Supplier" asp-action="Index">Suppliers</a>
+                            </li>
+                            <li class="nav-item">
                                 <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
                                     <button type="submit" class="btn btn-link nav-link text-danger p-0">Logout</button>
                                 </form>
                             </li>
                         }
+
 
 
                     </ul>

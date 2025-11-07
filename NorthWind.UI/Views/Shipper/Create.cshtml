@@ -1,0 +1,32 @@
+﻿@model IEnumerable<NorthWind.UI.Models.ShipperDto>
+
+<h2>Shippers</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Add New Shipper</a>
+</p>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Company Name</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var shipper in Model)
+            {
+                <tr>
+                    <td>@shipper.CompanyName</td>
+                    <td>@shipper.Phone</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No shippers found.</p>
+}

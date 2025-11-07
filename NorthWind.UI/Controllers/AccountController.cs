@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Northwind.UI.Models.DTO;
+using NorthWind.UI.Models;
 using NorthWind.UI.Models.DTO;
 using System.Text;
 using System.Text.Json;
