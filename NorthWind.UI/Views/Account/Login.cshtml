@@ -1,19 +1,24 @@
-﻿@model Northwind.UI.Models.DTO.LoginDto
+﻿@using NorthWind.UI.Models.DTO
+@model LoginRequestDto
+
+@{
+    ViewData["Title"] = "Login";
+}
 
 <h2>Login</h2>
 
-<form method="post" asp-controller="Account" asp-action="Login">
-    <div>
-        <label>Email:</label>
-        <input asp-for="Username" type="email" required />
+<form asp-action="Login" method="post">
+    <div class="mb-3">
+        <label asp-for="Username" class="form-label"></label>
+        <input asp-for="Username" class="form-control" />
     </div>
-
-    <div>
-        <label>Password:</label>
-        <input asp-for="Password" type="password" required />
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" type="password" />
     </div>
-
-    <button type="submit">Login</button>
-
-    <p style="color:red">@ViewBag.Error</p>
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+    <button type="submit" class="btn btn-primary">Login</button>
 </form>

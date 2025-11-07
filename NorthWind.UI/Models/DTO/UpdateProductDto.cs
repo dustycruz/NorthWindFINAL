@@ -1,6 +1,6 @@
-﻿namespace Northwind.DTO.Product
+﻿namespace NorthWind.UI.Models.DTO
 {
-    public class CreateProductDto
+    public class UpdateProductDto
     {
         public string ProductName { get; set; }
         public int SupplierId { get; set; }

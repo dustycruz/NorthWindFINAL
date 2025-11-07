@@ -1,13 +1,12 @@
 ﻿@model IEnumerable<NorthWind.UI.Models.CustomerViewModel>
 
-
 @{
     ViewData["Title"] = "Customers";
 }
 
 <h2>Customers</h2>
 
-<a asp-controller="Customer" asp-action="Add" class="btn btn-primary" style="margin-bottom:10px;">
+<a asp-controller="Customer" asp-action="Create" class="btn btn-primary mb-3">
     + Add Customer
 </a>
 
@@ -15,10 +14,11 @@
     <thead>
         <tr>
             <th>Customer ID</th>
-            <th>Name</th>
+            <th>Company Name</th>
             <th>Contact Name</th>
-            <th>Address</th>
-            <th>Country</th>
+            <th>Contact Title</th>
+            <th>City</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -26,10 +26,15 @@
         {
             <tr>
                 <td>@customer.CustomerId</td>
-                <td>@customer.Name</td>
+                <td>@customer.CompanyName</td>
                 <td>@customer.ContactName</td>
-                <td>@customer.Address</td>
-                <td>@customer.Country</td>
+                <td>@customer.ContactTitle</td>
+                <td>@customer.City</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@customer.CustomerId" class="btn btn-sm btn-warning">Edit</a>
+                    <a asp-action="Details" asp-route-id="@customer.CustomerId" class="btn btn-sm btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@customer.CustomerId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
             </tr>
         }
     </tbody>

@@ -4,17 +4,26 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// add MVC/Razor
+// Add MVC/Razor
 builder.Services.AddControllersWithViews();
 
-// HttpClient pointing to API - name "NorthWindAPI"
+// Add Session
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// HttpContextAccessor (needed for session in views/controllers)
+builder.Services.AddHttpContextAccessor();
+
+// HttpClient pointing to API - named "NorthWindAPI"
 builder.Services.AddHttpClient("NorthWindAPI", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["NorthWindAPI:BaseUrl"] ?? "https://localhost:5001");
 });
-
-// (OPTIONAL) Authentication setup here - cookie/OIDC etc.
-// For quick testing you can skip complex auth and call API endpoints that are not [Authorize].
 
 var app = builder.Build();
 
@@ -24,13 +33,17 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
 app.UseRouting();
+
+// ? Session middleware must go here
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

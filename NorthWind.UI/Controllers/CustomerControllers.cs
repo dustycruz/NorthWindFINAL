@@ -1,39 +1,37 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using NorthWind.UI.Filters;
 using NorthWind.UI.Models;
+using NorthWind.UI.Models.DTO;
 using System.Net.Http.Headers;
 using System.Text;
-using Newtonsoft.Json;
-
-
 
 namespace NorthWind.UI.Controllers
 {
+    [AuthorizeUI] // Require login
     public class CustomerController : Controller
     {
         private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string _baseUrl = "http://localhost:5155/api/Customer";
 
-        public CustomerController(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+        public CustomerController(IHttpClientFactory factory, IHttpContextAccessor httpContextAccessor)
         {
-            _httpClient = httpClientFactory.CreateClient();
-            _httpClient.BaseAddress = new Uri("http://localhost:5155/api/Customer"); // ✅ Base address set
+            _httpClient = factory.CreateClient();
+            _httpContextAccessor = httpContextAccessor;
+        }
 
-            var token = httpContextAccessor.HttpContext?.Session.GetString("JWToken");
-
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new UnauthorizedAccessException("You must log in first.");
-            }
-
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+        private void AddAuthHeader()
+        {
+            var token = _httpContextAccessor.HttpContext?.Session.GetString("JWToken");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
         public async Task<IActionResult> Index()
         {
-            var response = await _httpClient.GetAsync(""); // ✅ full URL resolved from BaseAddress
-            if (!response.IsSuccessStatusCode)
-                return View(new List<CustomerViewModel>());
-
+            AddAuthHeader();
+            var response = await _httpClient.GetAsync(_baseUrl);
+            if (!response.IsSuccessStatusCode) return View(new List<CustomerViewModel>());
             var json = await response.Content.ReadAsStringAsync();
             var customers = JsonConvert.DeserializeObject<List<CustomerViewModel>>(json);
             return View(customers);
@@ -44,22 +42,18 @@ namespace NorthWind.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CustomerViewModel model)
         {
+            AddAuthHeader();
             var json = JsonConvert.SerializeObject(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("", content);
-
-            if (response.IsSuccessStatusCode)
-                return RedirectToAction(nameof(Index));
-
-            return View(model);
+            var response = await _httpClient.PostAsync(_baseUrl, new StringContent(json, Encoding.UTF8, "application/json"));
+            if (!response.IsSuccessStatusCode) return View(model);
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var response = await _httpClient.GetAsync($"{id}");
-            if (!response.IsSuccessStatusCode)
-                return NotFound();
-
+            AddAuthHeader();
+            var response = await _httpClient.GetAsync($"{_baseUrl}/{id}");
+            if (!response.IsSuccessStatusCode) return NotFound();
             var json = await response.Content.ReadAsStringAsync();
             var customer = JsonConvert.DeserializeObject<CustomerViewModel>(json);
             return View(customer);
@@ -68,28 +62,25 @@ namespace NorthWind.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(int id, CustomerViewModel model)
         {
+            AddAuthHeader();
             var json = JsonConvert.SerializeObject(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PutAsync($"{id}", content);
-
-            if (response.IsSuccessStatusCode)
-                return RedirectToAction(nameof(Index));
-
-            return View(model);
+            var response = await _httpClient.PutAsync($"{_baseUrl}/{id}", new StringContent(json, Encoding.UTF8, "application/json"));
+            if (!response.IsSuccessStatusCode) return View(model);
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            await _httpClient.DeleteAsync($"{id}");
+            AddAuthHeader();
+            await _httpClient.DeleteAsync($"{_baseUrl}/{id}");
             return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Details(int id)
         {
-            var response = await _httpClient.GetAsync($"{id}");
-            if (!response.IsSuccessStatusCode)
-                return NotFound();
-
+            AddAuthHeader();
+            var response = await _httpClient.GetAsync($"{_baseUrl}/{id}");
+            if (!response.IsSuccessStatusCode) return NotFound();
             var json = await response.Content.ReadAsStringAsync();
             var customer = JsonConvert.DeserializeObject<CustomerViewModel>(json);
             return View(customer);

@@ -12,6 +12,17 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---------------------------
+// UI/Session Setup for Razor Pages or MVC Views
+// ---------------------------
+builder.Services.AddDistributedMemoryCache(); // required for session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // session timeout
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; // required for GDPR compliance
+});
+
+// ---------------------------
 // Add DbContext
 // ---------------------------
 builder.Services.AddDbContext<NorthwindDbContext>(options =>
@@ -129,6 +140,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ---------------------------
+// UI/Session Middleware
+// ---------------------------
+app.UseSession(); // <-- add this to enable session
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

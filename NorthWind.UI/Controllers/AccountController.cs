@@ -8,18 +8,16 @@ namespace NorthWind.UI.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IHttpClientFactory httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public AccountController(IHttpClientFactory httpClientFactory)
         {
-            this.httpClientFactory = httpClientFactory;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
+
         [HttpPost]
         public IActionResult Logout()
         {
@@ -27,34 +25,28 @@ namespace NorthWind.UI.Controllers
             return RedirectToAction("Login", "Account");
         }
 
-
         [HttpPost]
-        public async Task<IActionResult> Login(LoginRequestDto model)
-
+        public async Task<IActionResult> Login(LoginRequestDto dto)
         {
-            var client = httpClientFactory.CreateClient();
-
-            var httpRequestMessage = new HttpRequestMessage()
+            var client = _httpClientFactory.CreateClient();
+            var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Post,
                 RequestUri = new Uri("http://localhost:5155/api/Auth/login"),
-                Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json")
+                Content = new StringContent(JsonSerializer.Serialize(dto), Encoding.UTF8, "application/json")
             };
 
-            var httpResponse = await client.SendAsync(httpRequestMessage);
-
-            if (!httpResponse.IsSuccessStatusCode)
+            var response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Error = "Invalid Credentials";
+                ViewBag.Error = "Invalid credentials";
                 return View();
             }
 
-            var loginResult = await httpResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+            var loginResult = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
 
-            // ✅ STORE TOKEN IN SESSION
             HttpContext.Session.SetString("JWToken", loginResult.Token);
 
-            // ✅ REDIRECT
             return RedirectToAction("Index", "Customer");
         }
     }

@@ -1,5 +1,4 @@
-﻿
-@using NorthWind.UI.Models.DTO
+﻿@using NorthWind.UI.Models.DTO
 @model IEnumerable<ProductDto>
 
 @{
@@ -15,9 +14,9 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Discontinued</th>
+            <th>Product Name</th>
+            <th>Unit Price</th>
+            <th>Units In Stock</th>
             <th></th>
         </tr>
     </thead>
@@ -28,8 +27,8 @@
             {
                 <tr>
                     <td>@p.ProductName</td>
-                    <td>@p.UnitPrice</td>
-                    <td>@p.Discontinued</td>
+                    <td>@p.UnitPrice.ToString("C")</td>
+                    <td>@p.UnitsInStock</td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-warning btn-sm">Edit</a>
                         <form asp-action="Delete" asp-route-id="@p.ProductId" method="post" style="display:inline">

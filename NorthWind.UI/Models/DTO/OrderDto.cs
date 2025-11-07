@@ -1,6 +1,6 @@
-﻿namespace NorthWind.UI.Models
+﻿namespace NorthWind.UI.Models.DTO
 {
-    public class OrderViewModel
+    public class OrderDto
     {
         public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }

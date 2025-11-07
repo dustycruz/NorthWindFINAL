@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -19,20 +21,25 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
 
-                        @if (Context.Session.GetString("JWToken") != null)
+                        @{
+                            var token = HttpContextAccessor.HttpContext?.Session.GetString("JWToken");
+                        }
+
+                        @if (!string.IsNullOrEmpty(token))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Product" asp-action="Index">Products</a>
+                                <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Products</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Order" asp-action="Index">Orders</a>
+                                <a class="nav-link text-dark" asp-controller="Orders" asp-action="Index">Orders</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Index">Customer</a>
+                                <a class="nav-link text-dark" asp-controller="Customer" asp-action="Index">Customers</a>
                             </li>
                             <li class="nav-item">
                                 <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
@@ -46,12 +53,13 @@
                                 <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
-                    </ul>
 
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -63,6 +71,7 @@
             &copy; 2025 - NorthWind.UI - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
