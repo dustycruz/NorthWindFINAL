@@ -1,22 +1,43 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Northwind.Data; // <-- Replace with your actual DbContext namespace
-using NorthWind.Repositories; // <-- where GenericRepository is
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models; // <-- needed for Swagger security
+using Northwind.Data;
+using NorthWind.Repositories;
 using NorthWind.Service;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ? Add DbContext
+// ---------------------------
+// Add DbContext
+// ---------------------------
 builder.Services.AddDbContext<NorthwindDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("NorthWindConnection")));
 
-// ? Add AutoMapper
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+// ---------------------------
+// Add Identity BEFORE any service depending on it
+// ---------------------------
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<NorthwindDbContext>()
+    .AddDefaultTokenProviders();
 
-// ? Register Generic Repository (for all entities)
+// ---------------------------
+// Add AutoMapper
+// ---------------------------
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// ---------------------------
+// Register Generic Repository (for all entities)
+// ---------------------------
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// ? Register All Services
+// ---------------------------
+// Register Services
+// ---------------------------
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -24,20 +45,95 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
 builder.Services.AddScoped<IShipperService, ShipperService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
-builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-
-// ? Add Controllers + Swagger + Auth
+// ---------------------------
+// Controllers + Swagger
+// ---------------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// ? Add Authentication/Authorization
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer(options =>
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
-        options.Authority = builder.Configuration["Jwt:Authority"];
-        options.Audience = builder.Configuration["Jwt:Audience"];
+        Title = "NorthWind API",
+        Version = "v1"
     });
 
+    // ?? Add JWT Bearer Authorization for Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste your JWT token here. Example: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
+
+// ---------------------------
+// JWT Authentication
+// ---------------------------
+var jwtKey = builder.Configuration["Jwt:Key"];
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+    };
+});
+
 builder.Services.AddAuthorization();
+
+// ---------------------------
+// Build App
+// ---------------------------
+var app = builder.Build();
+
+// ---------------------------
+// Middleware
+// ---------------------------
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "NorthWind API V1");
+        c.RoutePrefix = "swagger"; // Swagger available at /swagger
+    });
+}
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
+// ---------------------------
+// Run App
+// ---------------------------
+app.Run();

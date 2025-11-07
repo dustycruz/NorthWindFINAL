@@ -54,22 +54,30 @@ namespace NorthWind.Service
             return true;
         }
 
+        // ---------------------------
+        // Implement the previously NotImplemented methods
+        // ---------------------------
+        public async Task<IEnumerable<Product>> GetAllAsyncEntities()
+        {
+            return await _repo.GetAllAsync();
+        }
+
+        public async Task<Product> GetAsync(int id)
+        {
+            return await _repo.GetAsync(id);
+        }
+
+        public async Task<Product> AddAsync(Product product)
+        {
+            return await _repo.AddAsync(product);
+        }
+
+        public async Task UpdateAsync(Product product)
+        {
+            await _repo.UpdateAsync(product);
+        }
+
         Task<IEnumerable<Product>> IProductService.GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Product> GetAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Product> AddAsync(Product product)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateAsync(Product product)
         {
             throw new NotImplementedException();
         }
